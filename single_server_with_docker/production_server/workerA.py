@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 
 # Celery configuration
-CELERY_BROKER_URL = 'amqp://rabbitmq:rabbitmq@rabbit:5672/'
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_RESULT_BACKEND = 'rpc://'
 
 # Initialize Celery
@@ -13,6 +13,7 @@ celery = Celery('workerA', broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKE
 
 # Load the saved model
 pipeline = joblib.load("best_model.pkl")
+
 
 def transform(df):
     date = datetime(2025, 5, 1)
@@ -32,15 +33,46 @@ def transform(df):
     features = [
         'forks', 'watchers', 'open_issues',
         'size', 'has_wiki', 'has_projects', 'has_downloads', 'is_fork',
-        'archived', 'language', 'license', 'subscribers_count', 
+        'archived', 'language', 'license', 'subscribers_count',
         'contributors_count', 'commits_count', 'readme_size',
         'project_age', 'days_since_update', 'days_since_push',
         'forks_per_day', 'issues_per_day', 'update_rate'
     ]
     return df[features]
 
+
 @celery.task
-def predict_sample():
+def predict_repos_task(repos):
+    results = []
+    for repo in repos:
+        repo_df = pd.DataFrame([repo])
+        X_sample = transform(repo_df)
+        if X_sample is not None:
+            y_pred = pipeline.predict(X_sample)[0]
+            results.append({
+                'repository': repo['full_name'],
+                'language': repo['language'],
+                'license': repo.get('license', 'None'),
+                'created_at': repo['created_at'],
+                'actual_stars': repo.get('stargazers_count', 'N/A'),
+                'predicted_stars': round(y_pred),
+                'forks': repo['forks'],
+                'watchers': repo['watchers'],
+                'commits': repo.get('commits_count', 'N/A')
+            })
+
+    # Sort by predicted stars in descending order
+    results.sort(key=lambda x: x['predicted_stars'], reverse=True)
+    return results
+
+
+def predict_repos(repos):
+    task = predict_repos_task.delay(repos)
+    return task.get(timeout=30)
+
+
+@celery.task
+def predict_sample_task():
     sample_repo = {
         'name': 'ml-web-app',
         'full_name': 'data-scientist/ml-web-app',
@@ -77,3 +109,8 @@ def predict_sample():
         }
     else:
         return {'error': 'Prediction failed due to preprocessing error'}
+
+
+def predict_sample():
+    task = predict_sample_task.delay()
+    return task.get(timeout=10)

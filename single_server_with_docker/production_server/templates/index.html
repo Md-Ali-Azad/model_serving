@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Model Performance</title>
+    <title>Star Predictor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Welcome</h1>
-    <form action="{{ url_for('predict') }}">
-        <button type="submit">Show Model Performance</button>
-    </form>
+    <h1>GitHub Star Predictor</h1>
+    <div class="container">
+        <form action="{{ url_for('predict') }}" method="post">
+            <button type="submit">Predict Top 5 Repositories</button>
+        </form>
+        <!--
+        <p>or</p>
+        <a href="{{ url_for('predict') }}">See Sample Prediction</a>-->
+    </div>
 </body>
 </html>
