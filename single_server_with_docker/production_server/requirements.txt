@@ -8,3 +8,6 @@ pandas
 scikit-learn
 joblib
 future
+gunicorn==20.1.0
+prometheus-flask-exporter==0.21.0
+flower==1.2.0

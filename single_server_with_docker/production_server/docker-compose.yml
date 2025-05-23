@@ -1,18 +1,45 @@
-version: "3"
+version: "3.8"
+
 services:
-  web:
-    build:
-      context: .
-      network: host
-    restart: always
-    volumes:
-      - type: bind
-        source: .
-        target: /app
+  nginx:
+    image: nginx:latest
     ports:
-      - "5100:5100"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web1
+      - web2
+      - web3
+
+  web1:
+    build: .
+    environment:
+      - FLASK_ENV=production
+    ports:
+      - "5101:5100"
     depends_on:
       - rabbit
+
+  web2:
+    build: .
+    environment:
+      - FLASK_ENV=production
+    ports:
+      - "5102:5100"
+    depends_on:
+      - rabbit
+
+  web3:
+    build: .
+    environment:
+      - FLASK_ENV=production
+    ports:
+      - "5103:5100"
+    depends_on:
+      - rabbit
+
   rabbit:
     hostname: rabbit
     image: rabbitmq:management
@@ -22,18 +49,44 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
   worker_1:
-    build:
-      context: .
-      network: host
+    build: .
     hostname: worker_1
     volumes:
-      - type: bind
-        source: .
-        target: /app
+      - .:/app
     entrypoint: celery
-    command: -A workerA worker --loglevel=debug
-    links:
-      - rabbit
+    command: -A workerA worker --loglevel=info
     depends_on:
       - rabbit
+
+  worker_2:
+    build: .
+    hostname: worker_2
+    volumes:
+      - .:/app
+    entrypoint: celery
+    command: -A workerA worker --loglevel=info
+    depends_on:
+      - rabbit
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  grafana-storage:
