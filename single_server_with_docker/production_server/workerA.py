@@ -31,12 +31,14 @@ def transform(df):
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.dropna(inplace=True)
     features = [
-        'forks', 'watchers', 'open_issues',
-        'size', 'has_wiki', 'has_projects', 'has_downloads', 'is_fork',
-        'archived', 'language', 'license', 'subscribers_count',
-        'contributors_count', 'commits_count', 'readme_size',
-        'project_age', 'days_since_update', 'days_since_push',
-        'forks_per_day', 'issues_per_day', 'update_rate'
+        'forks', 'open_issues',
+       'size', 'has_wiki', 'has_projects', 'has_downloads',
+       'archived', 'language', 'license',
+       'has_description', 'has_homepage', 'topic_count',
+       'has_discussions', 'is_template',
+       'subscribers_count', 'contributors_count', 'commits_count',
+       'readme_size', 'project_age', 'days_since_push',
+       'forks_per_day', 'issues_per_day'
     ]
     return df[features]
 
