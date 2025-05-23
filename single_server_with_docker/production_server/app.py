@@ -15,7 +15,7 @@ def index():
 def predict():
     if request.method == 'POST':
         # Get top 5 repos from dataset
-        df = pd.read_csv('github_repo_features.csv')
+        df = pd.read_csv('github_repo_features_new.csv')
         top_repos = df.sample(5).to_dict('records')
 
         # Predict stars for each repo
