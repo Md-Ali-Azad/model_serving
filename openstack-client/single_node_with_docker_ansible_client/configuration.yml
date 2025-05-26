@@ -38,8 +38,6 @@
  
   vars_files:
    - setup_var.yml  
-   - vault.yml
-
   
   tasks:  
    - name: Extra packages
@@ -101,7 +99,6 @@
   
   vars_files:
    - setup_var.yml
-   - vault.yml
 
   tasks:
    - name: Extra packages
